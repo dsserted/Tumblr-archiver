@@ -29,22 +29,22 @@ python tumblrcrawler.py YOUR_CONSUMER_KEY blogname D:\path\to\output
 ```
 your blogname should not include things like tumblr.com. An example of a valid command is:
 ```
-python tumblrcrawler.py 123456789asdfghjkl dsserted D:\MyFolder
+python tumblrcrawler.py “123456789asdfghjk” “dsserted” “D:\MyFolder”
 ```
 this command will create a folder named after your blog, which will contain all downloaded media and a json file, posts.json, which holds all your posts. If this process gets interrupted, make sure to start fresh, since posts are installed newest first and an aborted run may lead to duplicated posts. To update your blog, simply run this command again: It will download the x newest posts, where x is the difference between your archive and your active tumblr blog, and place them at the top reverse chronologically. Make sure to also regenerate the html file to see the update
 * To generate the html file, run:
 ```
-python crawler_viewer.py D:\path\to\output\blogname --blog_name "My Blog" --blog_title "My Blog Title"
+python crawler_viewer.py “D:\path\to\output\blogname” --blog_name "My Blog" --blog_title "My Blog Title"
 ```
 blog_name and blog_title are purely cosmetic variables that decide, respectively, what the name of your html will be and what will be displayed at the top of your header. An example of a valid command is:
 ```
-python crawler_viewer.py D:\MyFolder\dsserted --blog_name "Levi Dsserted" --blog_title "This was it. Finally, everyone was working together"
+python crawler_viewer.py “D:\MyFolder\dsserted --blog_name "Levi Dsserted" --blog_title "This was it. Finally, everyone was working together"
 ```
 *And you're done! Keep the html file in the folder it generated, which will be the folder with the name of your blog, since media files are referenced relatively. You can simply boot up the html file and browse your blog
 # TumblThree
 I have no involvement with TumblThree and as noted above have had issues with their crawler in the past. However, this repo also contains a script to convert a TumblThree archive into an html file as well. For this, run:
 ```
-python tumblThree_viewer.py "TumblThree-v2.20.1-x64-Application\Blogs\blogname" --blog_name "My Blog" --blog_title "My Blog Title"
+python tumblThree_viewer.py "D:\TumblThree-v2.20.1-x64-Application\Blogs\blogname" --blog_name "My Blog" --blog_title "My Blog Title"
 ```
 Where you replace the first argument with the path your archive, and the other arguments work the same. By default, this command assumes you downloaded your blog in the json format. Pass the optional argument --no-json if you downloaded it in text format instead
 
