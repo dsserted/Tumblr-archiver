@@ -6,11 +6,6 @@ Crawls a Tumblr blog via the official API (using PyTumblr2) and saves:
   - referenced media to          <OUTPUT_DIR>/<BLOG_NAME>/<original_filename>
 
 posts.json is a list of dictionaries 
-
-Safe to re-run: posts already in posts.json and media files already on
-disk are skipped. posts.json is flushed to disk periodically and again at
-the end (even on Ctrl+C), so an interrupted run only loses work back to
-the last flush, not the whole run.
 """
 
 import re
