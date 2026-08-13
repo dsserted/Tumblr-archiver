@@ -46,7 +46,7 @@ I have no involvement with TumblThree and as noted above have had issues with th
 ```
 python tumblThree_viewer.py "TumblThree-v2.20.1-x64-Application\Blogs\blogname" --blog_name "My Blog" --blog_title "My Blog Title"
 ```
-Where you replace the first argument with the path your archive, and the other arguments work the same. By default, this command assumes you downloaded your blog in the json format. Pass the optional argument —-no-json if you downloaded it in text format instead
+Where you replace the first argument with the path your archive, and the other arguments work the same. By default, this command assumes you downloaded your blog in the json format. Pass the optional argument --no-json if you downloaded it in text format instead
 
 # Youtube embeds
 If you simply open your html file, youtube embeds will display "Error 153". You can click on them to open them on a separate window where they will play. If you want the youtube videos to play within the html, you need to run:
