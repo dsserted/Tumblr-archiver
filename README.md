@@ -15,7 +15,7 @@ This repo exists because all the available tumblr backup tools I could find lack
 * Five themes you can pick from: Check out the example images on the repo
 
 # Installation and usage
-* If you don't have python, make sure to install it first.
+* If you don't have python 3.10+, make sure to install or upgrade it first.
 * In a terminal, run:
 ```
 git clone https://github.com/dsserted/Tumblr-archiver.git
