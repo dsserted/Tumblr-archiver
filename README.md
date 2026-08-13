@@ -31,7 +31,7 @@ your blogname should not include things like tumblr.com. An example of a valid c
 ```
 python tumblrcrawler.py 123456789asdfghjkl dsserted D:\MyFolder
 ```
-this command will create a folder named after your blog, which will contain all downloaded media and a json file, posts.json, which holds all your posts. If this process gets interrupted, make sure to start fresh, since posts are installed newest first and an aborted run may lead to duplicated posts. To update your blog, simply run this command again: It will download the x newest posts, where x is the difference between your archive and your active tumblr blog, and place at them at the top reverse chronologically
+this command will create a folder named after your blog, which will contain all downloaded media and a json file, posts.json, which holds all your posts. If this process gets interrupted, make sure to start fresh, since posts are installed newest first and an aborted run may lead to duplicated posts. To update your blog, simply run this command again: It will download the x newest posts, where x is the difference between your archive and your active tumblr blog, and place them at the top reverse chronologically. Make sure to also regenerate the html file to see the update
 * To generate the html file, run:
 ```
 python crawler_viewer.py D:\path\to\output\blogname --blog_name "My Blog" --blog_title "My Blog Title"
