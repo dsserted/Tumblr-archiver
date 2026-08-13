@@ -12,7 +12,7 @@ This repo exists because all the available tumblr backup tools I could find lack
 * A search bar. You can also add "#" to the beginning of your search to filter by tags, and click on any number of tags in the search bar to filter to only posts that contain those tags
 * Filtering by image, video and text posts
 * Support for: Text, image, video, audio, spotify and youtube embeds, QA and poll posts (more on youtube embeds below)
-* Five themes you can pick from
+* Five themes you can pick from: Check out the example images on the repo
 
 # Installation and usage
 * If you don't have python, make sure to install it first.
