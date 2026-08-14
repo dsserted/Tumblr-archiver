@@ -12,6 +12,7 @@ This repo exists because all the available tumblr backup tools I could find lack
 * A search bar. You can also add "#" to the beginning of your search to filter by tags, and click on any number of tags in the search bar to filter to only posts that contain those tags
 * Filtering by image, video and text posts
 * Support for: Text, image, video, audio, spotify and youtube embeds, QA and poll posts (more on youtube embeds below)
+* You can archive your drafts too!
 * Five themes you can pick from: Check out the example images on the repo
 
 # Installation and usage
@@ -41,6 +42,13 @@ blog_name and blog_title are purely cosmetic variables that decide, respectively
 python crawler_viewer.py “D:\MyFolder\dsserted --blog_name "Levi Dsserted" --blog_title "This was it. Finally, everyone was working together"
 ```
 *And you're done! Keep the html file in the folder it generated, which will be the folder with the name of your blog, since media files are referenced relatively. You can simply boot up the html file and browse your blog
+# Archiving Drafts
+In order to archive your drafts, you will need to obtain an OAUTH TOKEN and OAUTH SECRET as well. Simply go to Tumblr API Console(https://www.tumblr.com/oauth/apps) again and use your CONSUMER KEY and CONSUMER SECRET to authenticate. Then, use the following command to crawl through your drafts:
+```
+python tumblrcrawler.py YOUR_CONSUMER_KEY blogname D:\path\to\output --drafts --CONSUMER_SECRET "YOUR_CONSUMER_SECRET" --OAUTH_TOKEN "YOUR_OAUTH_TOKEN" --OAUTH_SECRET "YOUR_OAUTH_SECRET"
+```
+Replace YOUR_CONSUMER_KEY, YOUR_CONSUMER_SECRET, YOUR_OAUTH_TOKEN and YOUR_OAUTH_SECRET with the appropriate values. Note that, unlike posts, drafts are fetched in one go: If you want to update your drafts you have to delete your existing draft archive and run the above command again. Your drafts will be saved under (BLOG_NAME)_drafts, simply pass it to the crawler_viewer as a blog named (BLOG_NAME)_drafts to generate an html for your drafts
+
 # TumblThree
 I have no involvement with TumblThree and as noted above have had issues with their crawler in the past. However, this repo also contains a script to convert a TumblThree archive into an html file as well. For this, run:
 ```
