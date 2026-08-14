@@ -274,7 +274,7 @@ def build_body(post: dict,archive_path: Path) -> str:
                 ask = post["content"][i]["text"]
                 text += f'<p>{ask}</p>'
         body_html += blog
-        body_html += f'<p>{text}</p></blockquote>'
+        body_html += f'<p>{escape(text})</p></blockquote>'
     if post.get("trail"):
         for e in reversed(post.get("trail")):
             if e.get("blog"):
@@ -289,7 +289,7 @@ def build_body(post: dict,archive_path: Path) -> str:
         for e in post.get("trail"):
             for i in range(layout,len(e["content"])):
                 if e["content"][i]["type"] == "text":
-                    text = e["content"][i]["text"]
+                    text = escape(e["content"][i]["text"])
                     if e["content"][i].get("formatting"):
                         formatting = e["content"][i]["formatting"]
                         text = format_html(text,formatting)
@@ -369,7 +369,7 @@ def build_body(post: dict,archive_path: Path) -> str:
         for i in range(layout,len(post["content"])):
             e = post["content"][i]
             if e["type"] == "text":
-                text = e["text"]
+                text = escape(e["text"])
                 if e.get("formatting"):
                     formatting = e["formatting"]
                     text = format_html(text,formatting)
