@@ -38,7 +38,7 @@ If you want private posts to be archived as well, you will need to obtain an OAU
 ```
 python tumblrcrawler.py YOUR_CONSUMER_KEY blogname D:\path\to\output --CONSUMER_SECRET "YOUR_CONSUMER_SECRET" --OAUTH_TOKEN "YOUR_OAUTH_TOKEN" --OAUTH_SECRET "YOUR_OAUTH_SECRET"
 ```
-Replace YOUR_CONSUMER_KEY, YOUR_CONSUMER_SECRET, YOUR_OAUTH_TOKEN and YOUR_OAUTH_SECRET with the appropriate values
+Replace YOUR_CONSUMER_KEY, YOUR_CONSUMER_SECRET, YOUR_OAUTH_TOKEN and YOUR_OAUTH_SECRET with the appropriate values. Private posts appear with a gradient background in the html file
 * To generate the html file, run:
 ```
 python crawler_viewer.py “D:\path\to\output\blogname” --blog_name "My Blog" --blog_title "My Blog Title"
