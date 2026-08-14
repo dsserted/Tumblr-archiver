@@ -293,7 +293,7 @@ def build_body(post: dict,archive_path: Path) -> str:
                     if e["content"][i].get("formatting"):
                         formatting = e["content"][i]["formatting"]
                         text = format_html(text,formatting)
-                    content = f'<p style="white-space: pre-line;">{text}</p>'
+                    content = f'<p style="white-space: pre-wrap;">{text}</p>'
                     body_html += content
                 elif e["content"][i]["type"] == "image":
                     image = e["content"][i]["media"][0]
@@ -373,7 +373,7 @@ def build_body(post: dict,archive_path: Path) -> str:
                 if e.get("formatting"):
                     formatting = e["formatting"]
                     text = format_html(text,formatting)
-                content = f'<p style="white-space: pre-line;">{text}</p>'
+                content = f'<p style="white-space: pre-wrap;">{text}</p>'
                 body_html += content
             elif e["type"] == "image":
                 image = e["media"][0]
