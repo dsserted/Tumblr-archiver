@@ -7,10 +7,10 @@ Crawls a Tumblr blog via the official API (using PyTumblr2) and saves:
 
 posts.json is a list of dictionaries 
 
-Safe to re-run: posts already in posts.json and media files already on
-disk are skipped. posts.json is flushed to disk periodically and again at
-the end (even on Ctrl+C), so an interrupted run only loses work back to
-the last flush, not the whole run.
+Safe to re-run: posts already in posts.json (matched by id) and media
+files already on disk are skipped. posts.json is flushed to disk
+periodically and again at the end (even on Ctrl+C), so an interrupted
+run only loses work back to the last flush, not the whole run.
 
 Pass the optional argument --drafts to save all drafts to <OUTPUT_DIR>/<BLOG_NAME>_drafts/posts.json
 """
@@ -42,11 +42,6 @@ def save_all_posts(posts_list):
         json.dump(posts_list, f, ensure_ascii=False, indent=2)
 
 
-def get_total_posts():
-    info = client.blog_info(BLOG_NAME)
-    return info["blog"]["total_posts"]
-
-
 def check_rate_limit():
     """Look at the remaining request budget and pause if it's getting low."""
     try:
@@ -58,42 +53,48 @@ def check_rate_limit():
     except Exception:
         pass  # don't let a missing/odd ratelimit response kill the run
 
-def fetch_new_posts(already_downloaded):
-    """Fetches only the newest (total - already_downloaded) posts, newest-first,
-    and yields them one at a time."""
-    total = get_total_posts()
-    new_count = total - already_downloaded
-    if MAX_POSTS is not None:
-        new_count = min(new_count, MAX_POSTS)
-    if new_count <= 0:
-        print("Nothing new to fetch.")
-        return
-
-    print(f"{already_downloaded} post(s) already saved, {total} on blog - fetching {new_count} new post(s)")
-
+def fetch_new_posts(existing_ids):
+    """Walks the blog newest-first via offset pagination, yielding posts
+    one at a time, and stops as soon as a post whose id is already in
+    existing_ids is reached (or the blog runs out of posts)."""
+    fetched = 0
     offset = 0
-    while offset < new_count:
-        batch_size = min(POSTS_PER_REQUEST, new_count - offset)
+    while True:
+        if MAX_POSTS is not None and fetched >= MAX_POSTS:
+            break
+        batch_size = POSTS_PER_REQUEST
+        if MAX_POSTS is not None:
+            batch_size = min(batch_size, MAX_POSTS - fetched)
+
         resp = client.posts(BLOG_NAME, limit=batch_size, offset=offset)
         posts = resp.get("posts", [])
         if not posts:
-            break  # blog had fewer posts than total_posts claimed
+            break  # reached the end of the blog
 
         for post in posts:
+            if str(post["id"]) in existing_ids:
+                print(f"  reached already-saved post {post['id']} - stopping")
+                return
             yield post
+            fetched += 1
+            if MAX_POSTS is not None and fetched >= MAX_POSTS:
+                return
 
         offset += len(posts)
-        print(f"  ...{offset}/{new_count} new posts fetched")
+        print(f"  ...{fetched} new post(s) fetched")
 
         check_rate_limit()
         time.sleep(REQUEST_DELAY)
 
-def get_all_drafts():
-  """fetches all drafts from a blog"""
-    all_drafts = []
+def fetch_new_drafts(existing_ids):
+    """Walks drafts via before_id pagination, yielding drafts one at a
+    time, and stops as soon as a draft whose id is already in
+    existing_ids is reached (or drafts run out)."""
+    fetched = 0
     before_id = None
-
     while True:
+        if MAX_POSTS is not None and fetched >= MAX_POSTS:
+            break
         kwargs = {"limit": POSTS_PER_REQUEST}
         if before_id is not None:
             kwargs["before_id"] = before_id
@@ -103,20 +104,23 @@ def get_all_drafts():
         if not drafts:
             break
 
-        all_drafts.extend(drafts)
+        for draft in drafts:
+            if str(draft["id"]) in existing_ids:
+                print(f"  reached already-saved draft {draft['id']} - stopping")
+                return
+            yield draft
+            fetched += 1
+            if MAX_POSTS is not None and fetched >= MAX_POSTS:
+                return
+
         before_id = drafts[-1]["id"]
-        print(f"  ...{len(all_drafts)} draft(s) fetched")
+        print(f"  ...{fetched} draft(s) fetched")
 
         check_rate_limit()
         time.sleep(REQUEST_DELAY)
 
-        if MAX_POSTS is not None and len(all_drafts) >= MAX_POSTS:
-            break
-
         if len(drafts) < POSTS_PER_REQUEST:
             break  # short page — we've hit the end
-
-    return all_drafts[:MAX_POSTS] if MAX_POSTS is not None else all_drafts
 
 def normalize_media(media):
     """NPF 'media' shows up as a single dict (video) or a list of size
@@ -192,65 +196,63 @@ def main():
     parser.add_argument('--OAUTH_SECRET')
     args = parser.parse_args()
     CONSUMER_KEY = args.CONSUMER_KEY
-    BLOG_NAME = args.BLOG_NAME         #
+    BLOG_NAME = args.BLOG_NAME
     OUTPUT_DIR = Path(args.OUTPUT_DIR).resolve()
     MEDIA_DIR = OUTPUT_DIR / (f'{BLOG_NAME}_drafts' if args.drafts else BLOG_NAME)
-    
+
     POSTS_JSON_PATH = MEDIA_DIR / "posts.json"
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 
-    if args.drafts == True:
+    if args.drafts:
         CONSUMER_SECRET = args.CONSUMER_SECRET
         OAUTH_TOKEN = args.OAUTH_TOKEN
         OAUTH_SECRET = args.OAUTH_SECRET
-        client = pytumblr2.TumblrRestClient(CONSUMER_KEY,CONSUMER_SECRET, OAUTH_TOKEN, OAUTH_SECRET, consume_in_npf_by_default=True, convert_npf_to_legacy_html=True)
-        posts_list = get_all_drafts()
-        print(f"{len(posts_list)} draft(s) fetched")
+        client = pytumblr2.TumblrRestClient(CONSUMER_KEY, CONSUMER_SECRET, OAUTH_TOKEN, OAUTH_SECRET, consume_in_npf_by_default=True, convert_npf_to_legacy_html=True)
+        fetch_fn = fetch_new_drafts
+        label = "draft"
+    elif args.CONSUMER_SECRET:
+        CONSUMER_SECRET = args.CONSUMER_SECRET
+        OAUTH_TOKEN = args.OAUTH_TOKEN
+        OAUTH_SECRET = args.OAUTH_SECRET
+        client = pytumblr2.TumblrRestClient(CONSUMER_KEY, CONSUMER_SECRET, OAUTH_TOKEN, OAUTH_SECRET, consume_in_npf_by_default=True, convert_npf_to_legacy_html=True)
+        fetch_fn = fetch_new_posts
+        label = "post"
+    else:
+        client = pytumblr2.TumblrRestClient(CONSUMER_KEY, consume_in_npf_by_default=True, convert_npf_to_legacy_html=True)
+        fetch_fn = fetch_new_posts
+        label = "post"
 
-        failed_posts = 0
-        for post in posts_list[:]:  # copy, since we may remove entries on failure
+    posts_list = load_existing_posts()
+    existing_ids = {str(p["id"]) for p in posts_list}
+    print(f"{len(posts_list)} {label}(s) already saved in {POSTS_JSON_PATH}")
+
+    new_posts_collected = []   # newest-first; prepended to posts_list at the end
+    new_posts = 0
+    failed_posts = 0
+
+    try:
+        for post in fetch_fn(existing_ids):
             post_id = str(post["id"])
             try:
+                new_posts_collected.append(post)
+                new_posts += 1
                 for url in iter_media_urls(post):
                     download_media(url)
+
+                if new_posts % FLUSH_EVERY == 0:
+                    save_all_posts(new_posts_collected + posts_list)
+                    print(f"  flushed posts.json ({len(new_posts_collected) + len(posts_list)} total)")
             except Exception as e:
                 failed_posts += 1
-                print(f"  problem with draft {post_id}: {e}")
+                print(f"  problem with {label} {post_id}: {e}")
+    finally:
+        posts_list = new_posts_collected + posts_list
+        save_all_posts(posts_list)  # always flush, even on Ctrl+C or a crash
 
-        save_all_posts(posts_list)
-        print(f"\nDone. {len(posts_list)} draft(s) saved, {failed_posts} failed.")
-    else:
-        client = pytumblr2.TumblrRestClient(CONSUMER_KEY,consume_in_npf_by_default=True, convert_npf_to_legacy_html=True)
-        posts_list = load_existing_posts()
-        print(f"{len(posts_list)} post(s) already saved in {POSTS_JSON_PATH}")
-    
-        new_posts_collected = []   # newest-first; prepended to posts_list at the end
-        new_posts = 0
-        failed_posts = 0
-    
-        try:
-            for post in fetch_new_posts(len(posts_list)):
-                post_id = str(post["id"])
-                try:
-                    new_posts_collected.append(post)
-                    new_posts += 1
-                    for url in iter_media_urls(post):
-                        download_media(url)
-    
-                    if new_posts % FLUSH_EVERY == 0:
-                        save_all_posts(new_posts_collected + posts_list)
-                        print(f"  flushed posts.json ({len(new_posts_collected) + len(posts_list)} total)")
-                except Exception as e:
-                    failed_posts += 1
-                    print(f"  problem with post {post_id}: {e}")
-        finally:
-            posts_list = new_posts_collected + posts_list
-            save_all_posts(posts_list)  # always flush, even on Ctrl+C or a crash
-    
-        print(f"\nDone. {new_posts} new post(s) saved, {failed_posts} failed.")
-        print(f"Posts:  {POSTS_JSON_PATH}  ({len(posts_list)} total)")
-        print(f"Media:  {MEDIA_DIR}")
+    print(f"\nDone. {new_posts} new {label}(s) saved, {failed_posts} failed.")
+    print(f"Posts:  {POSTS_JSON_PATH}  ({len(posts_list)} total)")
+    print(f"Media:  {MEDIA_DIR}")
 
 if __name__ == "__main__":
     main()
