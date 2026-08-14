@@ -289,7 +289,7 @@ def build_body(post: dict,archive_path: Path) -> str:
                 name = e["blog"]["name"]
                 url = e["blog"]["url"]
                 post_id = e["post"]["id"]
-                blog = f'<p><a class="tumblr_blog" href="{url}/post/{post_id}">{name}</a>:</p><blockquote>'
+                blog = f'<p><a class="tumblr_blog" href="{url}/{post_id}">{name}</a>:</p><blockquote>'
             else:
                 name = e["broken_blog_name"] 
                 blog = f'<p><span class="tumblr_blog">{name}</span>:</p><blockquote>'
