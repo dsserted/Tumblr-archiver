@@ -32,7 +32,13 @@ your blogname should not include things like tumblr.com. An example of a valid c
 ```
 python tumblrcrawler.py “123456789asdfghjk” “dsserted” “D:\MyFolder”
 ```
-this command will create a folder named after your blog, which will contain all downloaded media and a json file, posts.json, which holds all your posts. If this process gets interrupted, make sure to start fresh, since posts are installed newest first and an aborted run may lead to duplicated posts. To update your blog, simply run this command again: It will download the x newest posts, where x is the difference between your archive and your active tumblr blog, and place them at the top reverse chronologically. Make sure to also regenerate the html file to see the update
+this command will create a folder named after your blog, which will contain all downloaded media and a json file, posts.json, which holds all your posts. If this process gets interrupted, make sure to start fresh, since posts are installed newest first and an aborted run may lead to duplicated or skipped posts. To update your blog, simply run this command again: It will download the x newest posts, where x is the difference between your archive and your active tumblr blog, and place them at the top reverse chronologically. Make sure to also regenerate the html file to see the update.
+
+If you want private posts to be archived as well, you you will need to obtain an OAUTH TOKEN and OAUTH SECRET as well. Simply go to Tumblr API Console(https://www.tumblr.com/oauth/apps) again and use your CONSUMER KEY and CONSUMER SECRET to authenticate. Then, use the following command 
+```
+python tumblrcrawler.py YOUR_CONSUMER_KEY blogname D:\path\to\output --CONSUMER_SECRET "YOUR_CONSUMER_SECRET" --OAUTH_TOKEN "YOUR_OAUTH_TOKEN" --OAUTH_SECRET "YOUR_OAUTH_SECRET"
+```
+Replace YOUR_CONSUMER_KEY, YOUR_CONSUMER_SECRET, YOUR_OAUTH_TOKEN and YOUR_OAUTH_SECRET with the appropriate values
 * To generate the html file, run:
 ```
 python crawler_viewer.py “D:\path\to\output\blogname” --blog_name "My Blog" --blog_title "My Blog Title"
@@ -41,13 +47,13 @@ blog_name and blog_title are purely cosmetic variables that decide, respectively
 ```
 python crawler_viewer.py “D:\MyFolder\dsserted --blog_name "Levi Dsserted" --blog_title "This was it. Finally, everyone was working together"
 ```
-*And you're done! Keep the html file in the folder it generated, which will be the folder with the name of your blog, since media files are referenced relatively. You can simply boot up the html file and browse your blog
+* And you're done! Keep the html file in the folder it generated, which will be the folder with the name of your blog, since media files are referenced relatively. You can simply boot up the html file and browse your blog
 # Archiving Drafts
 In order to archive your drafts, you will need to obtain an OAUTH TOKEN and OAUTH SECRET as well. Simply go to Tumblr API Console(https://www.tumblr.com/oauth/apps) again and use your CONSUMER KEY and CONSUMER SECRET to authenticate. Then, use the following command to crawl through your drafts:
 ```
 python tumblrcrawler.py YOUR_CONSUMER_KEY blogname D:\path\to\output --drafts --CONSUMER_SECRET "YOUR_CONSUMER_SECRET" --OAUTH_TOKEN "YOUR_OAUTH_TOKEN" --OAUTH_SECRET "YOUR_OAUTH_SECRET"
 ```
-Replace YOUR_CONSUMER_KEY, YOUR_CONSUMER_SECRET, YOUR_OAUTH_TOKEN and YOUR_OAUTH_SECRET with the appropriate values. Note that, unlike posts, drafts are fetched in one go: If you want to update your drafts you have to delete your existing draft archive and run the above command again. Your drafts will be saved under (BLOG_NAME)_drafts, simply pass it to the crawler_viewer as a blog named (BLOG_NAME)_drafts to generate an html for your drafts
+Replace YOUR_CONSUMER_KEY, YOUR_CONSUMER_SECRET, YOUR_OAUTH_TOKEN and YOUR_OAUTH_SECRET with the appropriate values. In order to update your drafts, run the command again. Your drafts will be saved under (BLOG_NAME)_drafts, simply pass it to the crawler_viewer as a blog named (BLOG_NAME)_drafts to generate an html for your drafts
 
 # TumblThree
 I have no involvement with TumblThree and as noted above have had issues with their crawler in the past. However, this repo also contains a script to convert a TumblThree archive into an html file as well. For this, run:
