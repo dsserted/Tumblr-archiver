@@ -90,6 +90,7 @@ header p { font-family: var(--font-ui); font-size: .85rem; color: var(--muted); 
 .post.hidden {display: none;}
 .post:hover { border-color: var(--accent);}
 .post-inner { display: flex; flex-direction: column; }
+.post-inner.private {background: linear-gradient(135deg, var(--accent), var(--accent2));}
 .tmblr-full { background: var(--surface); overflow: hidden; }
 .tmblr-full img { width: 100%; height: auto; max-height: 640px; object-fit: contain; display: block; }
 .tmblr-full video { width: 100%; height: auto; max-height: 640px; object-fit: contain; display: block; }
@@ -122,6 +123,7 @@ header p { font-family: var(--font-ui); font-size: .85rem; color: var(--muted); 
     background: var(--tag-bg); color: var(--muted); font-family: var(--font-ui);
     font-size: .7rem; padding: .2rem .55rem; border-radius: 999px; border: 1px solid var(--border);
 }
+.tag.private {background: linear-gradient(135deg, var(--accent2), var(--accent)); color: var(--text); }
 .npf_color_joey {color: #ff4b33;}
 .npf_color_monica {color: #ff9400;}
 .npf_color_phoebe {color: #e2a300;}
@@ -485,16 +487,25 @@ def build_post_html_crawler(entry: dict, archive_path: Path) -> str:
     # tags
     tags_html = ""
     if entry.get("tags"):
-        tags_html = (
-            '<div class="tags">'
-            + "".join(f'<span class="tag">#{escape(t)}</span>' for t in entry["tags"])
-            + '</div>'
-        )
+        if entry["state"] == "private":
+            tags_html = (
+                '<div class="tags">'
+                + "".join(f'<span class="tag private">#{escape(t)}</span>' for t in entry["tags"])
+                + '</div>'
+            )
+        else:
+            tags_html = (
+                '<div class="tags">'
+                + "".join(f'<span class="tag">#{escape(t)}</span>' for t in entry["tags"])
+                + '</div>'
+            )
         for tag in entry["tags"]:
             _TAGS[tag.strip().lower()] += 1
 
     content_inner = "\n".join(filter(None, [meta_html, title_html, body_html, tags_html]))
     content_div = f'<div class="post-content">{content_inner}</div>'
+    if entry["state"] == "private":
+        return f'<article class="post"><div class="post-inner private">{content_div}</div></article>'
     return f'<article class="post"><div class="post-inner">{content_div}</div></article>'
 def build_html(entries: list[dict], blog_title: str, blog_name: str, archive_path: Path) -> str:
     """Create the final archive html file"""
