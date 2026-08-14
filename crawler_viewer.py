@@ -271,7 +271,7 @@ def build_body(post: dict,archive_path: Path) -> str:
                 if e.get("formatting"):
                     formatting = e["formatting"]
                     ask = format_html(ask,formatting)
-                text += f'<p>{ask}</p>'
+                text += f'<p style="white-space: pre-wrap;">{ask}</p>'
         elif post.get("content"):
             layout = len(post["layout"][0]["blocks"])
             for i in range(layout):
@@ -280,7 +280,7 @@ def build_body(post: dict,archive_path: Path) -> str:
                 if e.get("formatting"):
                     formatting = e["formatting"]
                     ask = format_html(ask,formatting)
-                text += f'<p>{ask}</p>'
+                text += f'<p style="white-space: pre-wrap;">{ask}</p>'
         body_html += blog
         body_html += f'<p>{text}</p></blockquote>'
     if post.get("trail"):
