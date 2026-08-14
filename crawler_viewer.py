@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-crawler_file.py
+crawler_viewer.py
 
 Generates an html file from a blog crawl produced by tumblrcrawler.py
 """
