@@ -16,7 +16,7 @@ from html import escape
 _TAGS = Counter()
  
 def parse_entries_json(filepath: Path) -> list[dict]:
-    """Turns a json file into a list of dictionaries, which each element of the list being one post"""
+    """Turns a json file into a list of dictionaries, with each element of the list being one post"""
     text = filepath.read_text(encoding="utf-8")
     blocks = json.loads(text)
     return blocks
