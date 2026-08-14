@@ -800,7 +800,7 @@ def build_html(entries: list[dict], blog_title: str, blog_name: str, archive_pat
  
 def main():
     parser = argparse.ArgumentParser(description="Render a Tumblr archive .txt as an HTML viewer.")
-    parser.add_argument("archive", help=r"Path to the TumblThree archive of a blog, eg TumblThree-v2.20.1-x64-Application\Blogs\blogname")
+    parser.add_argument("archive", help=r"Path to the archive of a blog, eg D:\MyFolder\blogname")
     parser.add_argument("--blog_name", default="Tumblr Archive", 
                         help="The name your browser will display for the html file")
     parser.add_argument("--blog_title", 
