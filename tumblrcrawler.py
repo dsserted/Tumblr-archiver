@@ -89,9 +89,7 @@ def fetch_new_posts(already_downloaded):
         time.sleep(REQUEST_DELAY)
 
 def get_all_drafts():
-    """Drafts endpoint paginates via before_id (walking backward from a
-    cursor post), not offset/limit — offset is silently ignored, which
-    causes an infinite loop of repeated pages if used."""
+  """fetches all drafts from a blog"""
     all_drafts = []
     before_id = None
 
