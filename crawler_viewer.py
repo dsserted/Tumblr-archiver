@@ -164,6 +164,18 @@ ol li {
 .tmblr-full audio {width: 100%; margin-top: .5rem; accent-color: var(--accent);
     color-scheme: dark; }
 
+/* ── Links ── */
+.link-card {
+    display: flex; text-decoration: none; color: inherit;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden;
+}
+.link-card-poster { width: 120px; height: 120px; object-fit: cover; flex-shrink: 0; }
+.link-card-body { padding: .75rem 1rem; display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+.link-card-site { font-family: var(--font-ui); font-size: .7rem; color: var(--muted); text-transform: uppercase; }
+.link-card-title { font-family: var(--font-ui); font-weight: 600; }
+.link-card-desc { font-size: .85rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
 /* ── Toolbar ── */
 .toolbar {position: absolute;top: 1.25rem;left: 50%;transform: translateX(-50%);
 z-index: 100;display: flex;align-items: center;gap: .5rem;}
