@@ -320,7 +320,8 @@ def build_body(post: dict,archive_path: Path) -> str:
                     src = localize_video_url(url,archive_path)
                     width = media["width"]
                     height = media["height"]
-                    content = f'<figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}" data-npf="{{"type":"video","provider":"tumblr","url":"{url}","media":{media},"poster":{poster},"filmstrip":{filmstrip},"duration":{duration}}}"><video controls="controls" playsinline="playsinline"><source src="{src}" loading="lazy" type="video/mp4"></source></video></figure>'
+                    npf_json = json.dumps({"type": "video", "provider": "tumblr", "url": url, "media": media, "poster": poster, "filmstrip": filmstrip, "duration": duration})
+                    content = f'<figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}" data-npf=\'{escape(npf_json)}\'><video controls="controls" playsinline="playsinline"><source src="{src}" loading="lazy" type="video/mp4"></source></video></figure>'
                     body_html += content 
                 elif e["content"][i]["type"] == "video" and e["content"][i]["provider"] == "youtube":
                     video = e["content"][i]
@@ -411,8 +412,8 @@ def build_body(post: dict,archive_path: Path) -> str:
                 src = localize_video_url(url,archive_path)
                 width = media["width"]
                 height = media["height"]
-                content = f'<figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}" data-npf="{{"type":"video","provider":"tumblr","url":"{url}","media":{media},"poster":{poster},"filmstrip":{filmstrip},"duration":{duration}}}"><video controls="controls" playsinline="playsinline"><source src="{src}" loading="lazy" type="video/mp4"></source></video></figure>'
-                body_html += content
+                npf_json = json.dumps({"type": "video", "provider": "tumblr", "url": url, "media": media, "poster": poster, "filmstrip": filmstrip, "duration": duration})
+                content = f'<figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}" data-npf=\'{escape(npf_json)}\'><video controls="controls" playsinline="playsinline"><source src="{src}" loading="lazy" type="video/mp4"></source></video></figure>'
             elif e["type"] == "video" and e["provider"] == "youtube":
                 video = e
                 url = video["url"]
