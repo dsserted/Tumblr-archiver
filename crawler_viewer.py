@@ -369,7 +369,10 @@ def build_body(post: dict,archive_path: Path) -> str:
                     url = re.sub(r"(https://64\.media\.tumblr\.com/[a-f0-9]+)(?:/[^/]+)+/[^/]+\.mp3$",r"\1.mp3",url)
                     local_path = archive_path / url
                     if not local_path.is_file():
-                        url = audio["url"]
+                        url = re.sub(r'https://a\.tumblr\.com/(tumblr_[^?]+)\?.*', r'\1', url)
+                        local_path = archive_path / url
+                        if not local_path.is_file():
+                            url = audio["media"]["url"]
                     content = f"""<figure class="tmblr-full"><figcaption class="audio-caption"><span class="tmblr-audio-meta audio-details"><span class="tmblr-audio-meta title">{title}</span><span class="tmblr-audio-meta artist">{artist}</span><span class="tmblr-audio-meta album">{album}</span></span>"""
                     if image != None:
                         content += f"""<img class="album-cover" src="{image}" loading="lazy"/>""" 
@@ -385,6 +388,7 @@ def build_body(post: dict,archive_path: Path) -> str:
                     poster_url = poster[0]["url"] if poster else ""
                     npf_json = json.dumps({"type": "link", "url": url, "display_url": link.get("display_url"), "title": title, "description": description, "site_name": site_name, "poster": poster})
                     content = f'<figure class="tmblr-full tmblr-link" data-npf=\'{escape(npf_json)}\'><a class="link-card" href="{escape(url)}" target="_blank" rel="noopener noreferrer"><div class="link-card-body"><span class="link-card-site">{escape(site_name)}</span>{("<img class=\"link-card-poster\" src=\"" + poster_url + "\" loading=\"lazy\"/>") if poster_url else ""}<div class="link-card-title">{escape(title)}</div><div class="link-card-desc">{escape(description)}</div></div></a></figure>'
+                    body_html += content
                 elif e["content"][i]["type"] == "poll":
                     poll = e["content"][i]
                     client_id = poll["client_id"]
@@ -425,6 +429,7 @@ def build_body(post: dict,archive_path: Path) -> str:
                 height = media["height"]
                 npf_json = json.dumps({"type": "video", "provider": "tumblr", "url": url, "media": media, "poster": poster, "filmstrip": filmstrip, "duration": duration})
                 content = f'<figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}" data-npf=\'{escape(npf_json)}\'><video controls="controls" playsinline="playsinline"><source src="{src}" loading="lazy" type="video/mp4"></source></video></figure>'
+                body_html += content
             elif e["type"] == "video" and e["provider"] == "youtube":
                 video = e
                 url = video["url"]
@@ -459,7 +464,10 @@ def build_body(post: dict,archive_path: Path) -> str:
                 url = re.sub(r"(https://64\.media\.tumblr\.com/[a-f0-9]+)(?:/[^/]+)+/[^/]+\.mp3$",r"\1.mp3",url)
                 local_path = archive_path / url
                 if not local_path.is_file():
-                    url = audio["url"]
+                    url = re.sub(r'https://a\.tumblr\.com/(tumblr_[^?]+)\?.*', r'\1', url)
+                    local_path = archive_path / url
+                    if not local_path.is_file():
+                        url = audio["media"]["url"]
                 content = f"""<figure class="tmblr-full"><figcaption class="audio-caption"><span class="tmblr-audio-meta audio-details"><span class="tmblr-audio-meta title">{title}</span><span class="tmblr-audio-meta artist">{artist}</span><span class="tmblr-audio-meta album">{album}</span></span>"""
                 if image != None:
                     content += f"""<img class="album-cover" src="{image}" loading="lazy"/>""" 
