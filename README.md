@@ -34,7 +34,7 @@ python tumblrcrawler.py “123456789asdfghjk” “dsserted” “D:\MyFolder”
 ```
 this command will create a folder named after your blog, which will contain all downloaded media and a json file, posts.json, which holds all your posts. If this process gets interrupted, make sure to start fresh, since posts are installed newest first and an aborted run may lead to duplicated or skipped posts. To update your blog, simply run this command again: It will download the x newest posts, where x is the difference between your archive and your active tumblr blog, and place them at the top reverse chronologically. Make sure to also regenerate the html file to see the update.
 
-If you want private posts to be archived as well, you you will need to obtain an OAUTH TOKEN and OAUTH SECRET as well. Simply go to Tumblr API Console(https://www.tumblr.com/oauth/apps) again and use your CONSUMER KEY and CONSUMER SECRET to authenticate. Then, use the following command 
+If you want private posts to be archived as well, you will need to obtain an OAUTH TOKEN and OAUTH SECRET. Simply go to Tumblr API Console(https://www.tumblr.com/oauth/apps) again and use your CONSUMER KEY and CONSUMER SECRET to authenticate. Then, use the following command 
 ```
 python tumblrcrawler.py YOUR_CONSUMER_KEY blogname D:\path\to\output --CONSUMER_SECRET "YOUR_CONSUMER_SECRET" --OAUTH_TOKEN "YOUR_OAUTH_TOKEN" --OAUTH_SECRET "YOUR_OAUTH_SECRET"
 ```
