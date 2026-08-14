@@ -362,6 +362,17 @@ def build_body(post: dict,archive_path: Path) -> str:
                         content += f"""<img class="album-cover" src="{image}" loading="lazy"/>""" 
                     content += f"""</figcaption><audio controls="controls"><source src="{url}" loading="lazy" type="audio/mpeg"></source></audio></figure>"""
                     body_html += content
+                elif e["content"][i]["type"] == "link":
+                    link = e["content"][i]
+                    url = link["url"]
+                    title = link.get("title", "")
+                    description = link.get("description", "")
+                    site_name = link.get("site_name", "")
+                    poster = link.get("poster")
+                    poster_url = poster[0]["url"] if poster else ""
+                    npf_json = json.dumps({"type": "link", "url": url, "display_url": link.get("display_url"), "title": title, "description": description, "site_name": site_name, "poster": poster})
+                    content = f'<figure class="tmblr-full tmblr-link" data-npf=\'{escape(npf_json)}\'><a class="link-card" href="{escape(url)}" target="_blank" rel="noopener noreferrer"><div class="link-card-body"><span class="link-card-site">{escape(site_name)}</span><div class="link-card-title">{escape(title)}</div><div class="link-card-desc">{escape(description)}</div>{("<img class=\"link-card-poster\" src=\"" + poster_url + "\" loading=\"lazy\"/>") if poster_url else ""}</div></a></figure>'
+                    body_html += content
                 elif e["content"][i]["type"] == "poll":
                     poll = e["content"][i]
                     client_id = poll["client_id"]
@@ -441,6 +452,17 @@ def build_body(post: dict,archive_path: Path) -> str:
                 if image != None:
                     content += f"""<img class="album-cover" src="{image}" loading="lazy"/>""" 
                 content += f"""</figcaption><audio controls="controls"><source src="{url}" loading="lazy" type="audio/mpeg"></source></audio></figure>"""
+                body_html += content
+            elif e["type"] == "link":
+                link = e
+                url = link["url"]
+                title = link.get("title", "")
+                description = link.get("description", "")
+                site_name = link.get("site_name", "")
+                poster = link.get("poster")
+                poster_url = poster[0]["url"] if poster else ""
+                npf_json = json.dumps({"type": "link", "url": url, "display_url": link.get("display_url"), "title": title, "description": description, "site_name": site_name, "poster": poster})
+                content = f'<figure class="tmblr-full tmblr-link" data-npf=\'{escape(npf_json)}\'><a class="link-card" href="{escape(url)}" target="_blank" rel="noopener noreferrer"><div class="link-card-body"><span class="link-card-site">{escape(site_name)}</span><div class="link-card-title">{escape(title)}</div><div class="link-card-desc">{escape(description)}</div>{("<img class=\"link-card-poster\" src=\"" + poster_url + "\" loading=\"lazy\"/>") if poster_url else ""}</div></a></figure>'
                 body_html += content
             elif e["type"] == "poll":
                 poll = e
