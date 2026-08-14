@@ -267,7 +267,7 @@ def build_body(post: dict,archive_path: Path) -> str:
             layout = len(post["trail"][0]["layout"][0]["blocks"])
             for i in range(layout):
                 e = post["trail"][0]["content"][i]
-                ask = escape(e["text"])
+                ask = escape(e["text"], quote=False)
                 if e.get("formatting"):
                     formatting = e["formatting"]
                     ask = format_html(ask,formatting)
@@ -276,7 +276,7 @@ def build_body(post: dict,archive_path: Path) -> str:
             layout = len(post["layout"][0]["blocks"])
             for i in range(layout):
                 e = post["content"][i]
-                ask = escape(e["text"])
+                ask = escape(e["text"], quote=False)
                 if e.get("formatting"):
                     formatting = e["formatting"]
                     ask = format_html(ask,formatting)
@@ -297,7 +297,7 @@ def build_body(post: dict,archive_path: Path) -> str:
         for e in post.get("trail"):
             for i in range(layout,len(e["content"])):
                 if e["content"][i]["type"] == "text":
-                    text = escape(e["content"][i]["text"])
+                    text = escape(e["content"][i]["text"], quote=False)
                     if e["content"][i].get("formatting"):
                         formatting = e["content"][i]["formatting"]
                         text = format_html(text,formatting)
@@ -377,7 +377,7 @@ def build_body(post: dict,archive_path: Path) -> str:
         for i in range(layout,len(post["content"])):
             e = post["content"][i]
             if e["type"] == "text":
-                text = escape(e["text"])
+                text = escape(e["text"], quote=False)
                 if e.get("formatting"):
                     formatting = e["formatting"]
                     text = format_html(text,formatting)
