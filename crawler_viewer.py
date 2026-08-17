@@ -269,6 +269,94 @@ def format_html(text, formatting):
 # ── HTML generation ─────────────────────────────────────────────────────────────
 def build_body(post: dict,archive_path: Path) -> str:
     """Builds the body of the tumblr post"""
+    def build_body_minor(e: list):
+        """takes one entry in a post"""
+        if e["type"] == "text":
+            text = escape(e["text"], quote=False)
+            if e.get("formatting"):
+                formatting = e["formatting"]
+                text = format_html(text,formatting)
+            content = f'<p style="white-space: pre-wrap;">{text}</p>'
+        elif e["type"] == "image":
+            image = e["media"][0]
+            url = localize_image_url(image["url"],archive_path)
+            width = image["width"]
+            height = image["height"]
+            content = f'<div class="npf_row"><figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}"><img src="{url}" loading="lazy" data-orig-height="{height}" data-orig-width="{width}"/></figure></div>'
+        elif e["type"] == "video" and e["provider"] == "tumblr":
+            video = e
+            url = video["url"]
+            media = video["media"]
+            poster = video.get("poster")
+            filmstrip = video.get("filmstrip")
+            duration = video.get("duration")
+            src = localize_video_url(url,archive_path)
+            width = media["width"]
+            height = media["height"]
+            npf_json = json.dumps({"type": "video", "provider": "tumblr", "url": url, "media": media, "poster": poster, "filmstrip": filmstrip, "duration": duration})
+            content = f'<figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}" data-npf=\'{escape(npf_json)}\'><video controls="controls" playsinline="playsinline"><source src="{src}" loading="lazy" type="video/mp4"></source></video></figure>'
+        elif e["type"] == "video" and e["provider"] == "youtube":
+            video = e
+            url = video["url"]
+            width = video["embed_iframe"]["width"]
+            height = video["embed_iframe"]["height"]
+            embed_html = video["embed_html"]
+            content = f'<figure class="tmblr-full tmblr-embed" data-provider="youtube" data-url="{url}" data-orig-width="{width}" data-orig-height="{height}">{embed_html}</figure>'
+        elif e["type"] == "audio" and e["provider"] == "spotify":
+            audio = e
+            url = audio["url"]
+            title = audio["title"]
+            artist = audio["artist"]
+            album = audio["album"]
+            poster = audio["poster"]
+            attribution = audio["attribution"]
+            embed_html = audio["embed_html"]
+            embed_url = audio["embed_url"]
+            npf_json = json.dumps({"type": "audio", "provider": "spotify", "url": url, "title": title, "artist": artist, "album": album, "poster": poster, "attribution": attribution, "embed_html": embed_html})
+            content = f'<figure data-npf=\'{escape(npf_json)}\'><iframe class="spotify_audio_player" src="{embed_url}" frameborder="0" allowtransparency="true" width="500" height="580"></iframe></figure>'
+        elif e["type"] == "audio" and e["provider"] == "tumblr":
+            audio = e
+            url = audio["media"]["url"]
+            title = audio["title"]
+            artist = audio.get("artist") if audio.get("artist") else ""
+            album = audio.get("album") if audio.get("album") else ""
+            if  audio.get("poster"):
+                image = audio.get("poster")[0]["url"]
+            else:
+                image = None
+            url = re.sub(r"(https://64\.media\.tumblr\.com/[a-f0-9]+)(?:/[^/]+)+/[^/]+\.mp3$",r"\1.mp3",url)
+            local_path = archive_path / url
+            if not local_path.is_file():
+                url = re.sub(r'https://a\.tumblr\.com/(tumblr_[^?]+)\?.*', r'\1', url)
+                local_path = archive_path / url
+                if not local_path.is_file():
+                    url = audio["media"]["url"]
+            content = f"""<figure class="tmblr-full"><figcaption class="audio-caption"><span class="tmblr-audio-meta audio-details"><span class="tmblr-audio-meta title">{title}</span><span class="tmblr-audio-meta artist">{artist}</span><span class="tmblr-audio-meta album">{album}</span></span>"""
+            if image != None:
+                content += f"""<img class="album-cover" src="{image}" loading="lazy"/>""" 
+            content += f"""</figcaption><audio controls="controls"><source src="{url}" loading="lazy" type="audio/mpeg"></source></audio></figure>"""
+        elif e["type"] == "link":
+            link = e
+            url = link["url"]
+            title = link.get("title", "")
+            description = link.get("description", "")
+            site_name = link.get("site_name", "")
+            poster = link.get("poster")
+            poster_url = poster[0]["url"] if poster else ""
+            npf_json = json.dumps({"type": "link", "url": url, "display_url": link.get("display_url"), "title": title, "description": description, "site_name": site_name, "poster": poster})
+            content = f'<figure class="tmblr-full tmblr-link" data-npf=\'{escape(npf_json)}\'><a class="link-card" href="{escape(url)}" target="_blank" rel="noopener noreferrer"><div class="link-card-body"><span class="link-card-site">{escape(site_name)}</span>{("<img class=\"link-card-poster\" src=\"" + poster_url + "\" loading=\"lazy\"/>") if poster_url else ""}<div class="link-card-title">{escape(title)}</div><div class="link-card-desc">{escape(description)}</div></div></a></figure>'
+        elif e["type"] == "poll":
+            poll = e
+            client_id = poll["client_id"]
+            question = poll["question"]
+            answers = poll["answers"]
+            settings = poll["settings"]
+            content = f"""<div data-npf='{{"type":"poll","client_id":{client_id},"question":{question},"answers":{answers},"settings":{settings} }}' class="poll-post"></div><p class="poll-question">{question}</p>"""
+            for answer in answers:
+                content += f'<a class="poll-row"><p>{answer["answer_text"]}</p></a>'
+        else:
+            content = ""
+        return content
     body_html = r'<div class="post-body">'
     layout = 0
     if post["type"] == "answer":
@@ -308,192 +396,13 @@ def build_body(post: dict,archive_path: Path) -> str:
             body_html += blog
         for e in post.get("trail"):
             for i in range(layout,len(e["content"])):
-                if e["content"][i]["type"] == "text":
-                    text = escape(e["content"][i]["text"], quote=False)
-                    if e["content"][i].get("formatting"):
-                        formatting = e["content"][i]["formatting"]
-                        text = format_html(text,formatting)
-                    content = f'<p style="white-space: pre-wrap;">{text}</p>'
-                    body_html += content
-                elif e["content"][i]["type"] == "image":
-                    image = e["content"][i]["media"][0]
-                    url = localize_image_url(image["url"],archive_path)
-                    width = image["width"]
-                    height = image["height"]
-                    content = f'<div class="npf_row"><figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}"><img src="{url}" loading="lazy" data-orig-height="{height}" data-orig-width="{width}"/></figure></div>'
-                    body_html += content
-                elif e["content"][i]["type"] == "video" and e["content"][i]["provider"] == "tumblr":
-                    video = e["content"][i]
-                    url = video["url"]
-                    media = video["media"]
-                    poster = video.get("poster")
-                    filmstrip = video.get("filmstrip")
-                    duration = video.get("duration")
-                    src = localize_video_url(url,archive_path)
-                    width = media["width"]
-                    height = media["height"]
-                    npf_json = json.dumps({"type": "video", "provider": "tumblr", "url": url, "media": media, "poster": poster, "filmstrip": filmstrip, "duration": duration})
-                    content = f'<figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}" data-npf=\'{escape(npf_json)}\'><video controls="controls" playsinline="playsinline"><source src="{src}" loading="lazy" type="video/mp4"></source></video></figure>'
-                    body_html += content 
-                elif e["content"][i]["type"] == "video" and e["content"][i]["provider"] == "youtube":
-                    video = e["content"][i]
-                    url = video["url"]
-                    width = video["embed_iframe"]["width"]
-                    height = video["embed_iframe"]["height"]
-                    embed_html = video["embed_html"]
-                    content = f'<figure class="tmblr-full tmblr-embed" data-provider="youtube" data-url="{url}" data-orig-width="{width}" data-orig-height="{height}">{embed_html}</figure>'
-                    body_html += content
-                elif e["content"][i]["type"] == "audio" and e["content"][i]["provider"] == "spotify":
-                    audio = e["content"][i]
-                    url = audio["url"]
-                    title = audio["title"]
-                    artist = audio["artist"]
-                    album = audio["album"]
-                    poster = audio["poster"]
-                    attribution = audio["attribution"]
-                    embed_html = audio["embed_html"]
-                    embed_url = audio["embed_url"]
-                    npf_json = json.dumps({"type": "audio", "provider": "spotify", "url": url, "title": title, "artist": artist, "album": album, "poster": poster, "attribution": attribution, "embed_html": embed_html})
-                    content = f'<figure data-npf=\'{escape(npf_json)}\'><iframe class="spotify_audio_player" src="{embed_url}" frameborder="0" allowtransparency="true" width="500" height="580"></iframe></figure>'
-                    body_html += content
-                elif e["content"][i]["type"] == "audio" and e["content"][i]["provider"] == "tumblr":
-                    audio = e["content"][i]
-                    url = audio["media"]["url"]
-                    title = audio["title"]
-                    artist = audio.get("artist") if audio.get("artist") else ""
-                    album = audio.get("album") if audio.get("album") else ""
-                    if  audio.get("poster"):
-                        image = audio.get("poster")[0]["url"]
-                    else:
-                        image = None
-                    url = re.sub(r"(https://64\.media\.tumblr\.com/[a-f0-9]+)(?:/[^/]+)+/[^/]+\.mp3$",r"\1.mp3",url)
-                    local_path = archive_path / url
-                    if not local_path.is_file():
-                        url = re.sub(r'https://a\.tumblr\.com/(tumblr_[^?]+)\?.*', r'\1', url)
-                        local_path = archive_path / url
-                        if not local_path.is_file():
-                            url = audio["media"]["url"]
-                    content = f"""<figure class="tmblr-full"><figcaption class="audio-caption"><span class="tmblr-audio-meta audio-details"><span class="tmblr-audio-meta title">{title}</span><span class="tmblr-audio-meta artist">{artist}</span><span class="tmblr-audio-meta album">{album}</span></span>"""
-                    if image != None:
-                        content += f"""<img class="album-cover" src="{image}" loading="lazy"/>""" 
-                    content += f"""</figcaption><audio controls="controls"><source src="{url}" loading="lazy" type="audio/mpeg"></source></audio></figure>"""
-                    body_html += content
-                elif e["content"][i]["type"] == "link":
-                    link = e["content"][i]
-                    url = link["url"]
-                    title = link.get("title", "")
-                    description = link.get("description", "")
-                    site_name = link.get("site_name", "")
-                    poster = link.get("poster")
-                    poster_url = poster[0]["url"] if poster else ""
-                    npf_json = json.dumps({"type": "link", "url": url, "display_url": link.get("display_url"), "title": title, "description": description, "site_name": site_name, "poster": poster})
-                    content = f'<figure class="tmblr-full tmblr-link" data-npf=\'{escape(npf_json)}\'><a class="link-card" href="{escape(url)}" target="_blank" rel="noopener noreferrer"><div class="link-card-body"><span class="link-card-site">{escape(site_name)}</span>{("<img class=\"link-card-poster\" src=\"" + poster_url + "\" loading=\"lazy\"/>") if poster_url else ""}<div class="link-card-title">{escape(title)}</div><div class="link-card-desc">{escape(description)}</div></div></a></figure>'
-                    body_html += content
-                elif e["content"][i]["type"] == "poll":
-                    poll = e["content"][i]
-                    client_id = poll["client_id"]
-                    question = poll["question"]
-                    answers = poll["answers"]
-                    settings = poll["settings"]
-                    content = f"""<div data-npf='{{"type":"poll","client_id":{client_id},"question":{question},"answers":{answers},"settings":{settings} }}' class="poll-post"></div><p class="poll-question">{question}</p>"""
-                    for answer in answers:
-                        content += f'<a class="poll-row"><p>{answer["answer_text"]}</p></a>'
-                    body_html += content
+                content = build_body_minor(e["content"][i])
+                body_html += content
             body_html += r'</blockquote>'
     if post.get("content"):
         for i in range(layout,len(post["content"])):
-            e = post["content"][i]
-            if e["type"] == "text":
-                text = escape(e["text"], quote=False)
-                if e.get("formatting"):
-                    formatting = e["formatting"]
-                    text = format_html(text,formatting)
-                content = f'<p style="white-space: pre-wrap;">{text}</p>'
-                body_html += content
-            elif e["type"] == "image":
-                image = e["media"][0]
-                url = localize_image_url(image["url"],archive_path)
-                width = image["width"]
-                height = image["height"]
-                content = f'<div class="npf_row"><figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}"><img src="{url}" loading="lazy" data-orig-height="{height}" data-orig-width="{width}"/></figure></div>'
-                body_html += content
-            elif e["type"] == "video" and e["provider"] == "tumblr":
-                video = e
-                url = video["url"]
-                media = video["media"]
-                poster = video.get("poster")
-                filmstrip = video.get("filmstrip")
-                duration = video.get("duration")
-                src = localize_video_url(url,archive_path)
-                width = media["width"]
-                height = media["height"]
-                npf_json = json.dumps({"type": "video", "provider": "tumblr", "url": url, "media": media, "poster": poster, "filmstrip": filmstrip, "duration": duration})
-                content = f'<figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}" data-npf=\'{escape(npf_json)}\'><video controls="controls" playsinline="playsinline"><source src="{src}" loading="lazy" type="video/mp4"></source></video></figure>'
-                body_html += content
-            elif e["type"] == "video" and e["provider"] == "youtube":
-                video = e
-                url = video["url"]
-                width = video["embed_iframe"]["width"]
-                height = video["embed_iframe"]["height"]
-                embed_html = video["embed_html"]
-                content = f'<figure class="tmblr-full tmblr-embed" data-provider="youtube" data-url="{url}" data-orig-width="{width}" data-orig-height="{height}">{embed_html}</figure>'
-                body_html += content
-            elif e["type"] == "audio" and e["provider"] == "spotify":
-                audio = e
-                url = audio["url"]
-                title = audio["title"]
-                artist = audio["artist"]
-                album = audio["album"]
-                poster = audio["poster"]
-                attribution = audio["attribution"]
-                embed_html = audio["embed_html"]
-                embed_url = audio["embed_url"]
-                npf_json = json.dumps({"type": "audio", "provider": "spotify", "url": url, "title": title, "artist": artist, "album": album, "poster": poster, "attribution": attribution, "embed_html": embed_html})
-                content = f'<figure data-npf=\'{escape(npf_json)}\'><iframe class="spotify_audio_player" src="{embed_url}" frameborder="0" allowtransparency="true" width="500" height="580"></iframe></figure>'
-                body_html += content
-            elif e["type"] == "audio" and e["provider"] == "tumblr":
-                audio = e
-                url = audio["media"]["url"]
-                title = audio["title"]
-                artist = audio.get("artist") if audio.get("artist") else ""
-                album = audio.get("album") if audio.get("album") else ""
-                if  audio.get("poster"):
-                    image = audio.get("poster")[0]["url"]
-                else:
-                    image = None
-                url = re.sub(r"(https://64\.media\.tumblr\.com/[a-f0-9]+)(?:/[^/]+)+/[^/]+\.mp3$",r"\1.mp3",url)
-                local_path = archive_path / url
-                if not local_path.is_file():
-                    url = re.sub(r'https://a\.tumblr\.com/(tumblr_[^?]+)\?.*', r'\1', url)
-                    local_path = archive_path / url
-                    if not local_path.is_file():
-                        url = audio["media"]["url"]
-                content = f"""<figure class="tmblr-full"><figcaption class="audio-caption"><span class="tmblr-audio-meta audio-details"><span class="tmblr-audio-meta title">{title}</span><span class="tmblr-audio-meta artist">{artist}</span><span class="tmblr-audio-meta album">{album}</span></span>"""
-                if image != None:
-                    content += f"""<img class="album-cover" src="{image}" loading="lazy"/>""" 
-                content += f"""</figcaption><audio controls="controls"><source src="{url}" loading="lazy" type="audio/mpeg"></source></audio></figure>"""
-                body_html += content
-            elif e["type"] == "link":
-                link = e
-                url = link["url"]
-                title = link.get("title", "")
-                description = link.get("description", "")
-                site_name = link.get("site_name", "")
-                poster = link.get("poster")
-                poster_url = poster[0]["url"] if poster else ""
-                npf_json = json.dumps({"type": "link", "url": url, "display_url": link.get("display_url"), "title": title, "description": description, "site_name": site_name, "poster": poster})
-                content = f'<figure class="tmblr-full tmblr-link" data-npf=\'{escape(npf_json)}\'><a class="link-card" href="{escape(url)}" target="_blank" rel="noopener noreferrer"><div class="link-card-body"><span class="link-card-site">{escape(site_name)}</span>{("<img class=\"link-card-poster\" src=\"" + poster_url + "\" loading=\"lazy\"/>") if poster_url else ""}<div class="link-card-title">{escape(title)}</div><div class="link-card-desc">{escape(description)}</div></div></a></figure>'
-                body_html += content
-            elif e["type"] == "poll":
-                poll = e
-                client_id = poll["client_id"]
-                question = poll["question"]
-                answers = poll["answers"]
-                settings = poll["settings"]
-                content = f"""<div data-npf='{{"type":"poll","client_id":{client_id},"question":{question},"answers":{answers},"settings":{settings} }}' class="poll-post"></div><p class="poll-question">{question}</p>"""
-                for answer in answers:
-                    content += f'<a class="poll-row"><p>{answer["answer_text"]}</p></a>'
-                body_html += content
+            content = build_body_minor(post["content"][i])
+            body_html += content
     return body_html + r'</div>'
 def get_parent_blog_name(parent_post_url: str) -> str | None:
     """Extract the blog name from parent_post_url."""
