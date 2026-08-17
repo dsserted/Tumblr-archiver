@@ -219,7 +219,7 @@ def localize_image_url(url: str, archive_path: Path) -> str:
     name = local_media_filename(url)
     local_path = archive_path / name
     if local_path.is_file():
-        return f'{escape(name)}"'
+        return f'{escape(name)}'
     print(f"Couldn't locate file {url}")
     return url
 def localize_video_url(url: str, archive_path: Path) -> str:
@@ -227,7 +227,7 @@ def localize_video_url(url: str, archive_path: Path) -> str:
     name = parts[-1]
     local_path = archive_path / name
     if local_path.is_file():
-        return f'{escape(name)}"'
+        return f'{escape(name)}'
     print(f"Couldn't locate file {url}")
     return url
 def format_html(text, formatting):
