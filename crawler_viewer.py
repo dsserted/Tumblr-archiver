@@ -267,6 +267,8 @@ def format_html(text, formatting):
             elif fmt_type == "color":
                 color = escape(fmt.get("hex", ""), quote=True)
                 segment = f'<span style="color: {color};">{segment}</span>'
+            elif fmt_type == "small":
+                segment = f'<span style="font-size: smaller;">{segment}</span>'
         result.append(segment)
     return "".join(result)
 
