@@ -139,9 +139,11 @@ header p { font-family: var(--font-ui); font-size: .85rem; color: var(--muted); 
     font-family: var(--font-ui); font-size: .78rem; color: var(--muted);
     text-align: center; padding: 1rem; background: var(--background);
 }
-ol li {
-    list-style-position: inside;
-}
+ol {padding-left: 1em;}
+ol li {list-style-position: outside;}
+ul {padding-left: 1em;}
+ul li {list-style-position: outside;}
+
 /* ── Audio posts (Tumblr audio) ── */
 .audio-caption {display: flex; align-items: center; gap: .9rem;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
@@ -268,17 +270,43 @@ def format_html(text, formatting):
 # ── HTML generation ─────────────────────────────────────────────────────────────
 def build_body(post: dict,archive_path: Path) -> str:
     """Builds the body of the tumblr post"""
-    def build_body_minor(e: list):
+    list_type = None #For rendering ordered and unordered list subtypes. Set to None, "ol" or "ul"
+    def build_body_minor(e: list,list_type):
         """takes one entry in a post"""
         if e["type"] == "text":
             text = escape(e["text"], quote=False)
+            if not text: #Handles the case for empty text blocks. Not handling them doesn't change anything visually, but might as well
+                return "",list_type
             if e.get("formatting"):
                 formatting = e["formatting"]
                 text = format_html(text,formatting)
-            if e.get("subtype") == "indented":
-                content = f'<blockquote><p style="white-space: pre-wrap;">{text}</p></blockquote>'
+            if e.get("subtype"):
+                if e["subtype"] == "heading1":
+                    content = f'<h1><p style="white-space: pre-wrap;">{text}</p></h1>'
+                elif e["subtype"] == "heading2":
+                    content = f'<h2><p style="white-space: pre-wrap;">{text}</p></h2>'
+                elif e["subtype"] == "quirky":
+                    content = f'<p style="white-space: pre-wrap; font-family:cursive;">{text}</p>'
+                elif e["subtype"] == "quote":
+                    content = f'<p style="white-space: pre-wrap;">{text}</p>'
+                elif e["subtype"] == "chat":
+                    content = f'<p style="white-space: pre-wrap; font-family:monospace;">{text}</p>'
+                elif e["subtype"] == "indented":
+                    content = f'<blockquote><p style="white-space: pre-wrap;">{text}</p></blockquote>'
+                elif e["subtype"] in ("ordered-list-item", "unordered-list-item"):
+                    if list_type:
+                        content = f'<li><p style="white-space: pre-wrap;">{text}</p></li>'
+                    elif e["subtype"] == "ordered-list-item":
+                        list_type = "ol"
+                        content = f'<ol><li><p style="white-space: pre-wrap;">{text}</p></li>'
+                    else:
+                        list_type = "ul"
+                        content = f'<ul><li><p style="white-space: pre-wrap;">{text}</p></li>'
             else:
                 content = f'<p style="white-space: pre-wrap;">{text}</p>'
+            if list_type and (e.get("subtype") not in ("ordered-list-item", "unordered-list-item")):
+                content = rf'</{list_type}>' + content
+                list_type = None
         elif e["type"] == "image":
             image = e["media"][0]
             url = localize_image_url(image["url"],archive_path)
@@ -358,7 +386,7 @@ def build_body(post: dict,archive_path: Path) -> str:
                 content += f'<a class="poll-row"><p>{answer["answer_text"]}</p></a>'
         else:
             content = ""
-        return content
+        return content, list_type
     body_html = r'<div class="post-body">'
     layout = 0
     if post["type"] == "answer":
@@ -398,13 +426,17 @@ def build_body(post: dict,archive_path: Path) -> str:
             body_html += blog
         for e in post.get("trail"):
             for i in range(layout,len(e["content"])):
-                content = build_body_minor(e["content"][i])
+                content,list_type = build_body_minor(e["content"][i],list_type)
                 body_html += content
+            if list_type:
+                body_html += rf'</{list_type}>'
             body_html += r'</blockquote>'
     if post.get("content"):
         for i in range(layout,len(post["content"])):
-            content = build_body_minor(post["content"][i])
+            content,list_type = build_body_minor(post["content"][i],list_type)
             body_html += content
+        if list_type:
+            body_html += rf'</{list_type}>'
     return body_html + r'</div>'
 def get_parent_blog_name(parent_post_url: str) -> str | None:
     """Extract the blog name from parent_post_url."""
