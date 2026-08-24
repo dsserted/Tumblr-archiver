@@ -471,9 +471,6 @@ def build_post_html_crawler(entry: dict, archive_path: Path) -> str:
             )
     meta_html = '<div class="post-meta">' + "".join(meta_parts) + '</div>'
 
-    # title - only seen on original (non-reblog) text posts in the legacy API shape
-    title_html = f'<div class="post-title">{escape(entry["title"])}</div>' if entry.get("title") else ""
-
    # body
     body_html = build_body(entry,archive_path)
 
@@ -495,7 +492,7 @@ def build_post_html_crawler(entry: dict, archive_path: Path) -> str:
         for tag in entry["tags"]:
             _TAGS[tag.strip().lower()] += 1
 
-    content_inner = "\n".join(filter(None, [meta_html, title_html, body_html, tags_html]))
+    content_inner = "\n".join(filter(None, [meta_html, body_html, tags_html]))
     content_div = f'<div class="post-content">{content_inner}</div>'
     if entry["state"] == "private":
         return f'<article class="post"><div class="post-inner private">{content_div}</div></article>'
