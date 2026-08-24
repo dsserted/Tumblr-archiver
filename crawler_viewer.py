@@ -252,14 +252,13 @@ def format_html(text, formatting):
 
             if fmt_type == "bold":
                 segment = f"<strong>{segment}</strong>"
-
             elif fmt_type == "italic":
                 segment = f"<em>{segment}</em>"
-
+            elif fmt_type == "strikethrough":
+                segment = f"<s>{segment}</s>"
             elif fmt_type == "link":
                 url = escape(fmt.get("url", ""), quote=True)
                 segment = f'<a href="{url}">{segment}</a>'
-
             elif fmt_type == "color":
                 color = escape(fmt.get("hex", ""), quote=True)
                 segment = f'<span style="color: {color};">{segment}</span>'
@@ -276,7 +275,10 @@ def build_body(post: dict,archive_path: Path) -> str:
             if e.get("formatting"):
                 formatting = e["formatting"]
                 text = format_html(text,formatting)
-            content = f'<p style="white-space: pre-wrap;">{text}</p>'
+            if e.get("subtype") == "indented":
+                content = f'<blockquote><p style="white-space: pre-wrap;">{text}</p></blockquote>'
+            else:
+                content = f'<p style="white-space: pre-wrap;">{text}</p>'
         elif e["type"] == "image":
             image = e["media"][0]
             url = localize_image_url(image["url"],archive_path)
