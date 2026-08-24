@@ -261,6 +261,9 @@ def format_html(text, formatting):
             elif fmt_type == "link":
                 url = escape(fmt.get("url", ""), quote=True)
                 segment = f'<a href="{url}">{segment}</a>'
+            elif fmt_type == "mention":
+                url = escape(fmt.get("blog").get("url",""), quote=True)
+                segment = f'<a href="{url}">{segment}</a>'
             elif fmt_type == "color":
                 color = escape(fmt.get("hex", ""), quote=True)
                 segment = f'<span style="color: {color};">{segment}</span>'
