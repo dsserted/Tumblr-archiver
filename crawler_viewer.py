@@ -285,8 +285,8 @@ def build_body(post: dict,archive_path: Path) -> str:
             content = f'<div class="npf_row"><figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}"><img src="{url}" loading="lazy" data-orig-height="{height}" data-orig-width="{width}"/></figure></div>'
         elif e["type"] == "video" and e["provider"] == "tumblr":
             video = e
-            url = video["url"]
             media = video["media"]
+            url = media["url"]
             poster = video.get("poster")
             filmstrip = video.get("filmstrip")
             duration = video.get("duration")
