@@ -13,7 +13,7 @@ from pathlib import Path
 from html import escape
  
 # ── Parsing ────────────────────────────────────────────────────────────────────
-_TAGS = Counter()
+_TAGS = Counter() #Counter for all tags across all blogs, used to display tags from most used to least used
  
 def parse_entries_json(filepath: Path) -> list[dict]:
     """Turns a json file into a list of dictionaries, with each element of the list being one post"""
@@ -277,7 +277,7 @@ def build_body(post: dict,archive_path: Path) -> str:
     """Builds the body of the tumblr post"""
     list_type = None #For rendering ordered and unordered list subtypes. Set to None, "ol" or "ul"
     def build_body_minor(e: list,list_type):
-        """takes one entry in a post"""
+        """Builds one entry in a post."""
         if e["type"] == "text":
             text = escape(e["text"], quote=False)
             if not text: #Handles the case for empty text blocks. Not handling them doesn't change anything visually, but might as well
@@ -394,7 +394,7 @@ def build_body(post: dict,archive_path: Path) -> str:
         return content, list_type
     body_html = r'<div class="post-body">'
     layout = 0
-    if post["type"] == "answer":
+    if post["type"] == "answer": 
         name = post["asking_name"]
         text = ""
         blog = f'<p><span class="tumblr_blog">{name}</span>:</p><blockquote>'
@@ -418,8 +418,8 @@ def build_body(post: dict,archive_path: Path) -> str:
                 text += f'<p style="white-space: pre-wrap;">{ask}</p>'
         body_html += blog
         body_html += f'<p>{text}</p></blockquote>'
-    if post.get("trail"):
-        for e in reversed(post.get("trail")):
+    if post.get("trail"): #Trail contains additions made before this reblog.
+        for e in reversed(post.get("trail")): #Add blogname + blockquote in reverse order for tumblr  layour
             if e.get("blog"):
                 name = e["blog"]["name"]
                 url = e["blog"]["url"]
@@ -436,7 +436,7 @@ def build_body(post: dict,archive_path: Path) -> str:
             if list_type:
                 body_html += rf'</{list_type}>'
             body_html += r'</blockquote>'
-    if post.get("content"):
+    if post.get("content"): #Content contains the original additions made in this reblog
         for i in range(layout,len(post["content"])):
             content,list_type = build_body_minor(post["content"][i],list_type)
             body_html += content
