@@ -3,7 +3,7 @@
 crawler_viewer.py
 
 Generates an html file from a blog crawl produced by tumblrcrawler.py
-<div class="npf_row">
+
 """
 import re
 import json
