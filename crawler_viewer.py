@@ -3,6 +3,7 @@
 crawler_viewer.py
 
 Generates an html file from a blog crawl produced by tumblrcrawler.py
+<div class="npf_row">
 """
 import re
 import json
@@ -13,6 +14,7 @@ from pathlib import Path
 from html import escape
  
 # ── Parsing ────────────────────────────────────────────────────────────────────
+global _TAGS
 _TAGS = Counter() #Counter for all tags across all blogs, used to display tags from most used to least used
  
 def parse_entries_json(filepath: Path) -> list[dict]:
@@ -91,6 +93,8 @@ header p { font-family: var(--font-ui); font-size: .85rem; color: var(--muted); 
 .post:hover { border-color: var(--accent);}
 .post-inner { display: flex; flex-direction: column; }
 .post-inner.private {background: linear-gradient(135deg, var(--accent), var(--accent2));}
+.npf_row {display: flex; gap: 4px;}
+.npf_row .tmblr-full {flex: 1; min-width: 0;}
 .tmblr-full { background: var(--surface); overflow: hidden; }
 .tmblr-full img { width: 100%; height: auto; max-height: 640px; object-fit: contain; display: block; }
 .tmblr-full video { width: 100%; height: auto; max-height: 640px; object-fit: contain; display: block; }
@@ -276,8 +280,20 @@ def format_html(text, formatting):
 def build_body(post: dict,archive_path: Path) -> str:
     """Builds the body of the tumblr post"""
     list_type = None #For rendering ordered and unordered list subtypes. Set to None, "ol" or "ul"
+    def construct_row_groups(e:list):
+        """Build layout, a list of dictionaries where each entry is one key-value pair, the key being blocks
+        In case layout = [], or for ask posts only a type=ask with no display key exists, build a manual specifying
+        all vertical posts"""
+        row_groups = e["layout"]
+        if not row_groups:
+            row_groups = [{"blocks": [i]} for i in range(len(e["content"]))] #for layout = []
+        else:
+            row_groups = row_groups[-1].get("display")
+            if not row_groups:
+                row_groups = [{"blocks": [i]} for i in range(len(e["content"]))] #for layout = []
+        return row_groups
     def build_body_minor(e: list,list_type):
-        """Builds one entry in a post."""
+        """Builds one entry in a post"""
         if e["type"] == "text":
             text = escape(e["text"], quote=False)
             if not text: #Handles the case for empty text blocks. Not handling them doesn't change anything visually, but might as well
@@ -317,7 +333,7 @@ def build_body(post: dict,archive_path: Path) -> str:
             url = localize_image_url(image["url"],archive_path)
             width = image["width"]
             height = image["height"]
-            content = f'<div class="npf_row"><figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}"><img src="{url}" loading="lazy" data-orig-height="{height}" data-orig-width="{width}"/></figure></div>'
+            content = f'<figure class="tmblr-full" data-orig-height="{height}" data-orig-width="{width}"><img src="{url}" loading="lazy" data-orig-height="{height}" data-orig-width="{width}"/></figure>'
         elif e["type"] == "video" and e["provider"] == "tumblr":
             video = e
             media = video["media"]
@@ -393,14 +409,14 @@ def build_body(post: dict,archive_path: Path) -> str:
             content = ""
         return content, list_type
     body_html = r'<div class="post-body">'
-    layout = 0
-    if post["type"] == "answer": 
+    ask_length = 0
+    if post["type"] == "answer":
         name = post["asking_name"]
         text = ""
         blog = f'<p><span class="tumblr_blog">{name}</span>:</p><blockquote>'
-        if post.get("trail"):
-            layout = len(post["trail"][0]["layout"][0]["blocks"])
-            for i in range(layout):
+        if post.get("trail"): 
+            ask_length = len(post["trail"][0]["layout"][0]["blocks"])
+            for i in range(ask_length):
                 e = post["trail"][0]["content"][i]
                 ask = escape(e["text"], quote=False)
                 if e.get("formatting"):
@@ -408,8 +424,8 @@ def build_body(post: dict,archive_path: Path) -> str:
                     ask = format_html(ask,formatting)
                 text += f'<p style="white-space: pre-wrap;">{ask}</p>'
         elif post.get("content"):
-            layout = len(post["layout"][0]["blocks"])
-            for i in range(layout):
+            ask_length = len(post["layout"][0]["blocks"])
+            for i in range(ask_length):
                 e = post["content"][i]
                 ask = escape(e["text"], quote=False)
                 if e.get("formatting"):
@@ -419,7 +435,7 @@ def build_body(post: dict,archive_path: Path) -> str:
         body_html += blog
         body_html += f'<p>{text}</p></blockquote>'
     if post.get("trail"): #Trail contains additions made before this reblog.
-        for e in reversed(post.get("trail")): #Add blogname + blockquote in reverse order for tumblr  layour
+        for e in reversed(post.get("trail")): #Add blogname + blockquote in reverse order for tumblr layout
             if e.get("blog"):
                 name = e["blog"]["name"]
                 url = e["blog"]["url"]
@@ -430,19 +446,65 @@ def build_body(post: dict,archive_path: Path) -> str:
                 blog = f'<p><span class="tumblr_blog">{name}</span>:</p><blockquote>'
             body_html += blog
         for e in post.get("trail"):
-            for i in range(layout,len(e["content"])):
-                content,list_type = build_body_minor(e["content"][i],list_type)
-                body_html += content
+            row_groups = construct_row_groups(e)
+            content_counter = ask_length if e == post.get("trail")[0] else 0 
+            #Asks are handled separetly, as above. If in the first addition of trail in an ask post, we skip the parts related to the ask
+            for row in row_groups:
+                if post["type"] == "answer" and e == post.get("trail")[0] and max(row["blocks"]) < ask_length:
+                    continue
+                elif len(row["blocks"]) == 1:
+                    content,list_type = build_body_minor(e["content"][content_counter],list_type)
+                    content_counter += 1
+                    body_html += content
+                else:
+                    body_html += r'<div class="npf_row">'
+                    for __ in range(len(row["blocks"])):
+                        content,list_type = build_body_minor(e["content"][content_counter],list_type)
+                        content_counter += 1
+                        body_html += content
+                    body_html += r'</div>'
             if list_type:
                 body_html += rf'</{list_type}>'
+            list_type = None
             body_html += r'</blockquote>'
     if post.get("content"): #Content contains the original additions made in this reblog
-        for i in range(layout,len(post["content"])):
-            content,list_type = build_body_minor(post["content"][i],list_type)
-            body_html += content
+        row_groups = construct_row_groups(post) 
+        content_counter = ask_length #start building content, except asks handled separately
+        for row in row_groups:
+            if post["type"] == "answer" and max(row["blocks"]) < ask_length:
+                continue
+            elif len(row["blocks"]) == 1:
+                content,list_type = build_body_minor(post["content"][content_counter],list_type)
+                content_counter += 1
+                body_html += content
+            else:
+                body_html += r'<div class="npf_row">'
+                for __ in range(len(row["blocks"])):
+                    content,list_type = build_body_minor(post["content"][content_counter],list_type)
+                    content_counter += 1
+                    body_html += content
+                body_html += r'</div>'
         if list_type:
             body_html += rf'</{list_type}>'
     return body_html + r'</div>'
+def build_tags(post: dict,archive_path: Path) -> str:
+    tags_html = ""
+    if post.get("tags"):
+        if post["state"] == "private":
+            tags_html = (
+                '<div class="tags">'
+                + "".join(f'<span class="tag private">#{escape(t)}</span>' for t in post["tags"])
+                + '</div>'
+            )
+        else:
+            tags_html = (
+                '<div class="tags">'
+                + "".join(f'<span class="tag">#{escape(t)}</span>' for t in post["tags"])
+                + '</div>'
+            )
+        for tag in post["tags"]:
+            _TAGS[tag.strip().lower()] += 1
+    return tags_html
 def get_parent_blog_name(parent_post_url: str) -> str | None:
     """Extract the blog name from parent_post_url."""
     if not parent_post_url:
@@ -480,22 +542,7 @@ def build_post_html_crawler(entry: dict, archive_path: Path) -> str:
     body_html = build_body(entry,archive_path)
 
     # tags
-    tags_html = ""
-    if entry.get("tags"):
-        if entry["state"] == "private":
-            tags_html = (
-                '<div class="tags">'
-                + "".join(f'<span class="tag private">#{escape(t)}</span>' for t in entry["tags"])
-                + '</div>'
-            )
-        else:
-            tags_html = (
-                '<div class="tags">'
-                + "".join(f'<span class="tag">#{escape(t)}</span>' for t in entry["tags"])
-                + '</div>'
-            )
-        for tag in entry["tags"]:
-            _TAGS[tag.strip().lower()] += 1
+    tags_html = build_tags(entry,archive_path)
 
     content_inner = "\n".join(filter(None, [meta_html, body_html, tags_html]))
     content_div = f'<div class="post-content">{content_inner}</div>'
