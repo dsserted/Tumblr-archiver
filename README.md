@@ -63,12 +63,12 @@ python tumblThree_viewer.py "D:\TumblThree-v2.20.1-x64-Application\Blogs\blognam
 Where you replace the first argument with the path your archive, and the other arguments work the same. By default, this command assumes you downloaded your blog in the json format. Pass the optional argument --no-json if you downloaded it in text format instead
 
 # Youtube embeds
-If you simply open your html file, youtube embeds will display "Error 153". You can click on them to open them on a separate window where they will play. If you want the youtube videos to play within the html, you need to run:
+If you open your html file directly, youtube embeds will display "Error 153: Video player configuration error". You can click on the embeds to open them on a separate window where they will play. If you want youtube videos to play within the html, you need to run:
 ```
 cd D:\path\to\your\blog\blogname
 python -m http.server 8080
 ```
-and then open "http://localhost:8080/blog_name.html" in your preferred browser, where blog_name.html is the name of the html file generated. Beware that this increases the load time of the page compared to just opening the html.
+and then open "http://localhost:8080/blog_name.html" in your preferred browser, where blog_name.html is the name of the html file generated. Beware that this increases the load time of the page compared to just opening the html without a server.
 
 # Limitations
 Note that this project hosts your entire blog on a single html. For my blog of 3.5k posts, this ran pretty comfortably. For bigger blogs, this may cause excessive lag when using the search feature or lead to crashes. For these cases, I'd suggest using [tumblr-backup](https://pypi.org/project/tumblr-backup/) which separates your blog into a month by month archive instead
