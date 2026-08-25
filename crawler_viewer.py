@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 """
+Made by Dsserted
 crawler_viewer.py
 
 Generates an html file from a blog crawl produced by tumblrcrawler.py
 
+Internal details: Each tumblr post contains a content field for original additions 
+and a trail field for past additions. Trail field further contains content fields, 
+where each content is another reblog. Content fields can contain a multitude of following:
+text, image, video, audio, link, poll.
 """
 import re
 import json
@@ -228,6 +233,8 @@ def localize_video_url(url: str, archive_path: Path) -> str:
     print(f"Couldn't locate file {url}")
     return url
 def format_html(text, formatting):
+    """Apply the following formatting to text: bold, italic, strikethrough, link, mention, color, small.
+    Supports multiple formats applying at once"""
     # Collect all formatting boundaries
     boundaries = {0, len(text)}
     for fmt in formatting:
@@ -271,17 +278,17 @@ def format_html(text, formatting):
 def build_body(post: dict,archive_path: Path) -> str:
     """Builds the body of the tumblr post"""
     list_type = None #For rendering ordered and unordered list subtypes. Set to None, "ol" or "ul"
-    def construct_row_groups(e:list):
+    def construct_row_groups(e: list):
         """Build layout, a list of dictionaries where each entry is one key-value pair, the key being blocks
         In case layout = [], or for ask posts only a type=ask with no display key exists, build a manual specifying
-        all vertical posts"""
+        all vertical posts. Only the length is used, but an identical format layout is built for future compatibility"""
         row_groups = e["layout"]
-        if not row_groups:
+        if not row_groups: #for posts where layout = [], empty list
             row_groups = [{"blocks": [i]} for i in range(len(e["content"]))] #for layout = []
         else:
-            row_groups = row_groups[-1].get("display")
-            if not row_groups:
-                row_groups = [{"blocks": [i]} for i in range(len(e["content"]))] #for layout = []
+            row_groups = row_groups[-1].get("display") #Use the last layout, which will be of type "rows".
+            if not row_groups: #Some simple ask posts only have an "asks" type layout, and no "rows". These don't have a display key. In this case, use the fallback
+                row_groups = [{"blocks": [i]} for i in range(len(e["content"]))] 
         return row_groups
     def build_body_minor(e: list,list_type):
         """Builds one entry in a post"""
