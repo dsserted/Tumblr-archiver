@@ -128,15 +128,6 @@ header p { font-family: var(--font-ui); font-size: .85rem; color: var(--muted); 
     font-size: .7rem; padding: .2rem .55rem; border-radius: 999px; border: 1px solid var(--border);
 }
 .tag.private {background: linear-gradient(135deg, var(--accent2), var(--accent)); color: var(--text); }
-.npf_color_joey {color: #ff4b33;}
-.npf_color_monica {color: #ff9400;}
-.npf_color_phoebe {color: #e2a300;}
-.npf_color_ross {color: #0bda51;}
-.npf_color_rachel {color: #1e90ff;}
-.npf_color_chandler {color: #8f00ff;}
-.npf_color_niles {color: #ff69b4;}
-.npf_color_frasier {color: #191970;}
-.npf_color_mr_big {color: #051219;}
 .no-body { color: var(--muted); font-style: italic; font-size: .9rem; }
 .missing-img {
     min-height: 60px; display: flex; align-items: center; justify-content: center;
