@@ -63,7 +63,7 @@ python tumblThree_viewer.py "D:\TumblThree-v2.20.1-x64-Application\Blogs\blognam
 Where you replace the first argument with the path your archive, and the other arguments work the same. By default, this command assumes you downloaded your blog in the json format. Pass the optional argument --no-json if you downloaded it in text format instead
 
 # Youtube embeds
-If you open your html file directly, youtube embeds will display "Error 153: Video player configuration error". You can click on the embeds to open them on a separate window where they will play. If you want youtube videos to play within the html, you need to run:
+If you open your html file directly, youtube embeds will display "Error 153: Video player configuration error". You can click on the embeds to open them in a separate window where they will play. If you want youtube videos to play within the html, you need to run:
 ```
 cd D:\path\to\your\blog\blogname
 python -m http.server 8080
