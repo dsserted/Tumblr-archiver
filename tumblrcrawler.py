@@ -1,4 +1,5 @@
 """
+Made by Dsserted
 tumblrcrawler.py
 
 Crawls a Tumblr blog via the official API (using PyTumblr2) and saves:
