@@ -385,7 +385,7 @@ def build_body(post: dict,archive_path: Path) -> str:
             content = f"""<figure class="tmblr-full"><figcaption class="audio-caption"><span class="tmblr-audio-meta audio-details"><span class="tmblr-audio-meta title">{title}</span><span class="tmblr-audio-meta artist">{artist}</span><span class="tmblr-audio-meta album">{album}</span></span>"""
             if image != None:
                 content += f"""<img class="album-cover" src="{image}" loading="lazy"/>""" 
-            content += f"""</figcaption><audio controls="controls"><source src="{url}" loading="lazy" type="audio/mpeg"></source></audio></figure>"""
+            content += f"""</figcaption><audio controls="controls" style="background: linear-gradient(270deg, var(--accent), var(--accent2));"><source src="{url}" loading="lazy" type="audio/mpeg"></source></audio></figure>"""
         elif e["type"] == "link":
             link = e
             url = link["url"]
