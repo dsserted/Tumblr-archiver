@@ -32,7 +32,7 @@ your blogname should not include things like tumblr.com. An example of a valid c
 ```
 python tumblrcrawler.py “123456789asdfghjk” “dsserted” “D:\MyFolder”
 ```
-this command will create a folder named after your blog, which will contain all downloaded media and a json file, posts.json, which holds all your posts. If this process gets interrupted, make sure to start fresh, since posts are installed newest first and an aborted run may lead to duplicated or skipped posts. To update your blog, simply run this command again: It will download the x newest posts, where x is the difference between your archive and your active tumblr blog, and place them at the top reverse chronologically. Make sure to also regenerate the html file to see the update.
+this command will create a folder named after your blog, which will contain all downloaded media and a json file, posts.json, which holds all your posts. If this process gets interrupted, make sure to start fresh, since posts are installed newest first and an aborted run may lead to duplicated or skipped posts. To update your blog, simply run this command again: It will download the newest posts until it hits a post that has already been archived, and then place them at the top reverse chronologically. Make sure to also regenerate the html file to see the update.
 
 If you want private posts to be archived as well, you will need to obtain an OAUTH TOKEN and OAUTH SECRET. Simply go to Tumblr API Console(https://www.tumblr.com/oauth/apps) again and use your CONSUMER KEY and CONSUMER SECRET to authenticate. Then, use the following command 
 ```
