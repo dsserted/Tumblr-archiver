@@ -10,7 +10,7 @@ This repo exists because all the available tumblr backup tools I could find lack
 * All your posts live in one big html file
 * All images and videos are hosted locally on your device
 * A search bar. You can also add "#" to the beginning of your search to filter by tags, and click on any number of tags in the search bar to filter to only posts that contain those tags
-* Filtering by image, video and text posts
+* Filtering by image, video, text posts and original content
 * Support for: Text, image, video, audio, spotify and youtube embeds, QA, links and poll posts (more on youtube embeds below)
 * You can archive your drafts too!
 * Five themes you can pick from: Check out the example images on the repo
