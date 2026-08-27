@@ -278,6 +278,7 @@ def format_html(text, formatting):
 def build_body(post: dict,archive_path: Path) -> str:
     """Builds the body of the tumblr post"""
     list_type = None #For rendering ordered and unordered list subtypes. Set to None, "ol" or "ul"
+    original_content = False #Does this post contain any original additions, ie a "content" field
     def construct_row_groups(e: list):
         """Build layout, a list of dictionaries where each entry is one key-value pair, the key being blocks
         In case layout = [], or for ask posts only a type=ask with no display key exists, build a manual specifying
@@ -466,6 +467,7 @@ def build_body(post: dict,archive_path: Path) -> str:
             list_type = None
             body_html += r'</blockquote>'
     if post.get("content"): #Content contains the original additions made in this reblog
+        original_content = True
         row_groups = construct_row_groups(post) 
         content_counter = ask_length #start building content, except asks handled separately
         for row in row_groups:
@@ -484,7 +486,7 @@ def build_body(post: dict,archive_path: Path) -> str:
                 body_html += r'</div>'
         if list_type:
             body_html += rf'</{list_type}>'
-    return body_html + r'</div>'
+    return (body_html + r'</div>'),original_content
 def build_tags(post: dict,archive_path: Path) -> str:
     tags_html = ""
     if post.get("tags"):
@@ -537,7 +539,7 @@ def build_post_html_crawler(entry: dict, archive_path: Path) -> str:
     meta_html = '<div class="post-meta">' + "".join(meta_parts) + '</div>'
 
    # body
-    body_html = build_body(entry,archive_path)
+    body_html,original_content = build_body(entry,archive_path)
 
     # tags
     tags_html = build_tags(entry,archive_path)
@@ -545,8 +547,8 @@ def build_post_html_crawler(entry: dict, archive_path: Path) -> str:
     content_inner = "\n".join(filter(None, [meta_html, body_html, tags_html]))
     content_div = f'<div class="post-content">{content_inner}</div>'
     if entry["state"] == "private":
-        return f'<article class="post"><div class="post-inner private">{content_div}</div></article>'
-    return f'<article class="post"><div class="post-inner">{content_div}</div></article>'
+        return f'<article class="post" data-og="{str(original_content)}"><div class="post-inner private">{content_div}</div></article>'
+    return f'<article class="post" data-og="{str(original_content)}"><div class="post-inner">{content_div}</div></article>'
 def build_html(entries: list[dict], blog_title: str, blog_name: str, archive_path: Path) -> str:
     """Create the final archive html file"""
     posts_html = "\n".join(build_post_html_crawler(e,archive_path) for e in entries) 
@@ -623,6 +625,12 @@ def build_html(entries: list[dict], blog_title: str, blog_name: str, archive_pat
           <div class="toggle-btn"></div>
         </div>
       </div>
+      <div class="dropdown-row">
+        <span>Original Content Only</span>
+        <div class="toggle" id="toggle-og">
+          <div class="toggle-btn"></div>
+        </div>
+      </div>
       <div class="dropdown-label">Tags</div>
       <div class="tagsearch">
         {OrderedTagsHtml}
@@ -652,6 +660,7 @@ def build_html(entries: list[dict], blog_title: str, blog_name: str, archive_pat
     let video_filter = true;
     let image_filter = true;
     let text_filter = true;
+    let og_filter = false;
     var r = document.querySelector(':root');
 
     searchInput.addEventListener('focus', () => {
@@ -770,6 +779,7 @@ def build_html(entries: list[dict], blog_title: str, blog_name: str, archive_pat
     document.querySelectorAll('.post').forEach(post => {
         const image = post.querySelector('img');
         const video = post.querySelector('video');
+        const original_content = post.dataset.og === "True";
         var tags_match = true;
         committedTags.forEach(committedTag => {
             var matchesCommitted = false;
@@ -783,7 +793,7 @@ def build_html(entries: list[dict], blog_title: str, blog_name: str, archive_pat
             post.querySelectorAll('.tag').forEach(tag => {
                 matches = (matches||new RegExp('^' + escapeRegex(term)).test(tag.textContent.toLowerCase()))
             });
-            if (!(matches || term === '' )||(!video_filter&&video)||(!image_filter&&image)||(!text_filter&&!image&&!video)||!(tags_match)) {
+            if (!(matches || term === '' )||(!video_filter&&video)||(!image_filter&&image)||(!text_filter&&!image&&!video)||(og_filter&&!original_content)||!(tags_match)) {
                 post.classList.add('hidden');
             } else {
                 post.classList.remove('hidden');
@@ -791,7 +801,7 @@ def build_html(entries: list[dict], blog_title: str, blog_name: str, archive_pat
         }
         else { 
         const matches = new RegExp('\\b' + escapeRegex(term)).test(post.textContent.toLowerCase());
-        if (!(matches || term === '' )||(!video_filter&&video)||(!image_filter&&image)||(!text_filter&&!image&&!video)||!(tags_match)) {
+        if (!(matches || term === '' )||(!video_filter&&video)||(!image_filter&&image)||(!text_filter&&!image&&!video)||(og_filter&&!original_content)||!(tags_match)) {
             post.classList.add('hidden');
         } else {
             post.classList.remove('hidden');
@@ -841,6 +851,11 @@ def build_html(entries: list[dict], blog_title: str, blog_name: str, archive_pat
     document.getElementById('toggle-text').addEventListener('click', function() {
         this.classList.toggle('active');
         text_filter = !text_filter;
+        Search(term = searchInput.value.toLowerCase());
+    });
+    document.getElementById('toggle-og').addEventListener('click', function() {
+        this.classList.toggle('active');
+        og_filter = !og_filter;
         Search(term = searchInput.value.toLowerCase());
     });
 </script>
