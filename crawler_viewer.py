@@ -538,13 +538,18 @@ def build_post_html_crawler(entry: dict, archive_path: Path) -> str:
             )
     meta_html = '<div class="post-meta">' + "".join(meta_parts) + '</div>'
 
-   # body
+    # body
     body_html,original_content = build_body(entry,archive_path)
 
+    # source
+    if entry.get("source_url"):
+        source_html = f'<div class="tags"><a style="color:var(--muted);" href="{escape(entry["source_url"])}">Source: {escape(entry["source_title"])}</a></div>'
+    else:
+        source_html = ""
     # tags
     tags_html = build_tags(entry,archive_path)
 
-    content_inner = "\n".join(filter(None, [meta_html, body_html, tags_html]))
+    content_inner = "\n".join(filter(None, [meta_html, body_html, source_html,tags_html]))
     content_div = f'<div class="post-content">{content_inner}</div>'
     if entry["state"] == "private":
         return f'<article class="post" data-og="{str(original_content)}"><div class="post-inner private">{content_div}</div></article>'
